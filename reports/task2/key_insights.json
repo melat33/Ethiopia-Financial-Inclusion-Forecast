@@ -1,0 +1,51 @@
+{
+  "top_insights": [
+    {
+      "title": "Paradox of Mobile Money Growth vs Account Ownership",
+      "evidence": "65M+ mobile accounts vs only +3pp growth (2021-2024)",
+      "implication": "Focus on active usage, not registration"
+    },
+    {
+      "title": "Infrastructure Drives Access",
+      "evidence": "Agent density shows 0.72 correlation with ownership",
+      "implication": "Expand agent networks for inclusion"
+    },
+    {
+      "title": "Gender Gap Persists but Improving",
+      "evidence": "14pp gender gap in account ownership (down from 16pp)",
+      "implication": "Targeted interventions still needed for women"
+    },
+    {
+      "title": "Event Timing Matters",
+      "evidence": "Telebirr launch had stronger impact than M-Pesa entry",
+      "implication": "First-mover advantage significant in digital finance"
+    },
+    {
+      "title": "Active Usage Lags Registration",
+      "evidence": "38M active users vs 65M+ registered (58% activation)",
+      "implication": "Activation strategies critical for real inclusion"
+    }
+  ],
+  "key_questions": {
+    "What drives inclusion?": "Infrastructure (agents), mobile internet, urbanization",
+    "Why 2021-2024 slowdown?": "Duplicate accounts, population growth, data differences",
+    "Gender gap status?": "Improving but 14pp gap remains",
+    "Data limitations?": "Missing infrastructure data (2015-2020), limited regional disaggregation",
+    "Hypotheses for Task 3?": "Agent expansion \u2192 access, digital literacy \u2192 usage, events drive adoption"
+  },
+  "data_limitations": [
+    "Missing infrastructure data (2015-2020)",
+    "Limited regional disaggregation",
+    "Inconsistent active user tracking",
+    "Sparse temporal coverage for some indicators",
+    "Event impact data needs more granularity"
+  ],
+  "recommendations": [
+    "Focus on agent network expansion for access",
+    "Track active vs registered users separately",
+    "Collect gender-disaggregated data",
+    "Improve regional data collection",
+    "Use event studies for impact evaluation",
+    "Monitor infrastructure-development correlation"
+  ]
+}
