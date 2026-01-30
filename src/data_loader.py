@@ -1,50 +1,105 @@
 """
-Data loading and validation module
+Data loading and validation module for Ethiopia Financial Inclusion Project
 """
 import pandas as pd
 import numpy as np
-from typing import Tuple, Dict, Optional
+from datetime import datetime
+import os
 
-def load_and_validate_data(data_path: str, ref_codes_path: Optional[str] = None) -> Tuple[pd.DataFrame, Optional[pd.DataFrame]]:
+def load_and_validate_data(data_path, ref_codes_path=None):
     """
     Load and validate the financial inclusion dataset
     
-    Args:
-        data_path: Path to main dataset CSV
-        ref_codes_path: Path to reference codes CSV
+    Parameters:
+    -----------
+    data_path : str
+        Path to the main dataset (Excel or CSV file)
+    ref_codes_path : str, optional
+        Path to reference codes file
         
     Returns:
-        Tuple of (dataframe, reference_codes dataframe)
+    --------
+    Tuple of (dataframe, reference_codes dataframe)
     """
-    # Load main dataset
-    df = pd.read_csv(data_path)
+    
+    # Check file extension and load accordingly
+    file_extension = os.path.splitext(data_path)[1].lower()
+    
+    if file_extension == '.csv':
+        df = pd.read_csv(data_path)
+    elif file_extension in ['.xlsx', '.xls']:
+        df = pd.read_excel(data_path)
+    else:
+        raise ValueError(f"Unsupported file format: {file_extension}. Use CSV or Excel files.")
+    
+    print(f"✅ Loaded dataset from: {data_path}")
+    print(f"   - Shape: {df.shape}")
+    print(f"   - Columns: {list(df.columns)}")
     
     # Load reference codes if provided
     ref_codes = None
     if ref_codes_path:
-        ref_codes = pd.read_csv(ref_codes_path)
+        ref_extension = os.path.splitext(ref_codes_path)[1].lower()
+        
+        if ref_extension == '.csv':
+            ref_codes = pd.read_csv(ref_codes_path)
+        elif ref_extension in ['.xlsx', '.xls']:
+            ref_codes = pd.read_excel(ref_codes_path)
+        else:
+            print(f"⚠️ Warning: Could not load reference codes from {ref_codes_path}")
     
     # Basic validation
-    required_columns = ['record_type', 'indicator_code', 'value_numeric']
-    missing_cols = [col for col in required_columns if col not in df.columns]
-    
-    if missing_cols:
-        raise ValueError(f"Missing required columns: {missing_cols}")
+    validate_dataset(df)
     
     return df, ref_codes
 
-def validate_schema_compliance(df: pd.DataFrame) -> Dict[str, bool]:
+def validate_dataset(df):
     """
-    Validate that dataset follows unified schema rules
+    Perform basic validation on the dataset
     
-    Returns:
-        Dictionary of validation results
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        The dataset to validate
     """
-    validations = {
-        'events_no_pillar': df[(df['record_type'] == 'event') & (df['pillar'].notna())].empty,
-        'observations_have_pillar': df[(df['record_type'] == 'observation') & (df['pillar'].isna())].empty,
-        'impact_links_have_parent': df[(df['record_type'] == 'impact_link') & (df['parent_id'].isna())].empty,
-        'all_records_have_type': df['record_type'].notna().all()
-    }
+    print("\n🔍 Performing dataset validation...")
     
-    return validations
+    # Check required columns
+    required_columns = ['record_type', 'indicator_code', 'value_numeric', 'obs_date']
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    
+    if missing_columns:
+        print(f"⚠️ Warning: Missing required columns: {missing_columns}")
+    else:
+        print("✅ All required columns present")
+    
+    # Check data types
+    if 'obs_date' in df.columns:
+        try:
+            # Try to convert to datetime
+            df['obs_date'] = pd.to_datetime(df['obs_date'])
+            print("✅ obs_date column converted to datetime")
+        except Exception as e:
+            print(f"⚠️ Warning: Could not convert obs_date to datetime: {e}")
+    
+    # Check for duplicates
+    duplicates = df.duplicated().sum()
+    if duplicates > 0:
+        print(f"⚠️ Warning: {duplicates} duplicate rows found")
+    else:
+        print("✅ No duplicate rows found")
+    
+    # Basic statistics
+    print(f"\n📊 Dataset Statistics:")
+    print(f"   - Total records: {len(df):,}")
+    print(f"   - Unique indicators: {df['indicator_code'].nunique()}")
+    print(f"   - Date range: {df['obs_date'].min().date()} to {df['obs_date'].max().date()}")
+    
+    # Record type distribution
+    if 'record_type' in df.columns:
+        record_counts = df['record_type'].value_counts()
+        print("\n📋 Record Type Distribution:")
+        for rt, count in record_counts.items():
+            print(f"   - {rt}: {count:,}")
+    
+    return True
