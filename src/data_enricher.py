@@ -284,3 +284,4 @@ class DataEnricher:
                 })
         
         return base_data[:16]  # Return first 16 records
+    
