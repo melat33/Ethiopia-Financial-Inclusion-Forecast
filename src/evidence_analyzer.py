@@ -1,90 +1,116 @@
 """
-Evidence Analyzer - Comparable country evidence
+Evidence Analyzer - Comparable country evidence analysis
 """
 import pandas as pd
 import numpy as np
 from typing import Dict, List
 
 class EvidenceAnalyzer:
-    """Analyze comparable country evidence for impact estimation"""
+    """Analyze and apply comparable country evidence"""
     
-    # Evidence database from research
-    COUNTRY_EVIDENCE = {
-        'mobile_money_launch': {
-            'Kenya': {'impact_1yr': 5.2, 'impact_3yr': 12.8, 'confidence': 'high'},
-            'Tanzania': {'impact_1yr': 3.8, 'impact_3yr': 9.5, 'confidence': 'high'},
-            'Ghana': {'impact_1yr': 2.5, 'impact_3yr': 6.2, 'confidence': 'medium'}
-        },
-        'interoperability': {
-            'Kenya': {'impact_1yr': 2.1, 'impact_3yr': 4.3, 'confidence': 'medium'},
-            'Tanzania': {'impact_1yr': 1.8, 'impact_3yr': 3.9, 'confidence': 'medium'},
-            'India': {'impact_1yr': 3.5, 'impact_3yr': 8.2, 'confidence': 'high'}
-        },
-        'agent_network_expansion': {
-            'Kenya': {'impact_per_10k_agents': 0.8, 'confidence': 'medium'},
-            'Tanzania': {'impact_per_10k_agents': 0.6, 'confidence': 'medium'}
+    def __init__(self):
+        self.evidence_db = self._load_evidence_database()
+    
+    def _load_evidence_database(self) -> Dict:
+        """Load evidence database"""
+        return {
+            'mobile_money_launch': {
+                'Kenya (M-Pesa 2007)': {
+                    'impact_1yr': 5.2,
+                    'impact_3yr': 12.8,
+                    'pre_launch': 26.0,
+                    'post_3yr': 38.8,
+                    'source': 'World Bank Findex',
+                    'confidence': 'high'
+                },
+                'Tanzania (Vodacom 2008)': {
+                    'impact_1yr': 3.8,
+                    'impact_3yr': 9.5,
+                    'pre_launch': 17.0,
+                    'post_3yr': 26.5,
+                    'source': 'GSMA Report',
+                    'confidence': 'high'
+                },
+                'Ghana (MTN 2009)': {
+                    'impact_1yr': 2.5,
+                    'impact_3yr': 6.2,
+                    'pre_launch': 29.0,
+                    'post_3yr': 35.2,
+                    'source': 'CGAP Study',
+                    'confidence': 'medium'
+                }
+            },
+            'market_entry_competition': {
+                'Kenya (Airtel 2010)': {
+                    'impact_1yr': 1.8,
+                    'impact_3yr': 3.5,
+                    'source': 'Central Bank of Kenya',
+                    'confidence': 'medium'
+                }
+            },
+            'regulatory_reform': {
+                'India (PSP Licensing 2016)': {
+                    'impact_2yr': 8.2,
+                    'source': 'RBI Report',
+                    'confidence': 'high'
+                }
+            }
         }
-    }
     
-    def get_comparable_evidence(self, event_type: str, 
-                               countries: List[str] = None) -> Dict:
-        """Get evidence from comparable countries"""
-        if event_type not in self.COUNTRY_EVIDENCE:
+    def get_evidence_for_event(self, event_type: str, 
+                              adjustment_factor: float = 0.8) -> Dict:
+        """Get evidence for specific event type with Ethiopia adjustment"""
+        if event_type not in self.evidence_db:
             return {'error': f'No evidence for {event_type}'}
         
-        evidence = self.COUNTRY_EVIDENCE[event_type]
+        evidence = self.evidence_db[event_type]
         
-        if countries:
-            evidence = {k: v for k, v in evidence.items() if k in countries}
+        # Calculate statistics
+        impacts_3yr = []
+        for country, data in evidence.items():
+            if 'impact_3yr' in data:
+                impacts_3yr.append(data['impact_3yr'])
         
-        # Calculate averages
-        impacts = []
-        for country_data in evidence.values():
-            if 'impact_3yr' in country_data:
-                impacts.append(country_data['impact_3yr'])
-            elif 'impact_1yr' in country_data:
-                impacts.append(country_data['impact_1yr'] * 3)
-        
-        if impacts:
-            avg_impact = np.mean(impacts)
-            std_impact = np.std(impacts)
+        if impacts_3yr:
+            avg_impact = np.mean(impacts_3yr)
+            std_impact = np.std(impacts_3yr)
             
             return {
+                'event_type': event_type,
                 'comparable_countries': list(evidence.keys()),
-                'average_impact_3yr': avg_impact,
-                'impact_range': (avg_impact - std_impact, avg_impact + std_impact),
-                'country_evidence': evidence,
-                'ethiopia_adjustment_factor': 0.8,  # Ethiopia-specific adjustment
-                'recommended_impact': avg_impact * 0.8  # Adjusted for Ethiopia
+                'international_average_3yr': avg_impact,
+                'international_std_3yr': std_impact,
+                'ethiopia_adjusted_3yr': avg_impact * adjustment_factor,
+                'confidence': evidence[list(evidence.keys())[0]]['confidence'],
+                'adjustment_notes': f'Applied {adjustment_factor}x adjustment for Ethiopia context',
+                'recommended_range': (
+                    (avg_impact - std_impact) * adjustment_factor,
+                    (avg_impact + std_impact) * adjustment_factor
+                )
             }
         
-        return {'error': 'No impact data available'}
+        return {'error': 'Insufficient impact data'}
     
-    def validate_impact_estimate(self, event_type: str, 
-                                estimated_impact: float) -> Dict:
-        """Validate impact estimate against comparable evidence"""
-        evidence = self.get_comparable_evidence(event_type)
+    def validate_estimate(self, event_type: str, estimate: float) -> Dict:
+        """Validate impact estimate against evidence"""
+        evidence = self.get_evidence_for_event(event_type)
         
         if 'error' in evidence:
             return {'validation': 'NO_EVIDENCE', 'confidence': 'low'}
         
-        lower, upper = evidence['impact_range']
-        recommended = evidence['recommended_impact']
+        lower, upper = evidence['recommended_range']
+        recommended = evidence['ethiopia_adjusted_3yr']
         
-        if lower <= estimated_impact <= upper:
+        if lower <= estimate <= upper:
             return {
-                'validation': 'WITHIN_RANGE',
+                'validation': 'WITHIN_EXPECTED_RANGE',
                 'confidence': 'high',
-                'estimated': estimated_impact,
-                'recommended_range': (lower, upper),
-                'deviation': estimated_impact - recommended
+                'deviation_percent': ((estimate - recommended) / recommended) * 100
             }
         else:
             return {
-                'validation': 'OUTSIDE_RANGE',
+                'validation': 'OUTSIDE_EXPECTED_RANGE',
                 'confidence': 'medium',
-                'estimated': estimated_impact,
-                'recommended_range': (lower, upper),
-                'deviation': estimated_impact - recommended,
+                'deviation_percent': ((estimate - recommended) / recommended) * 100,
                 'suggestion': f'Consider adjusting to {recommended:.1f}pp'
             }
