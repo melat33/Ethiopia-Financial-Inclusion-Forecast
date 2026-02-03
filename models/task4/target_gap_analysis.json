@@ -1,0 +1,20 @@
+{
+  "ACC_OWNERSHIP": {
+    "2025": {
+      "target": 70.0,
+      "forecast": 54.2413793103442,
+      "gap_pp": 15.7586206896558,
+      "gap_percent": 22.512315270936856,
+      "required_annual_growth": 15.7586206896558
+    }
+  },
+  "USG_DIGITAL_PAYMENT": {
+    "2025": {
+      "target": 45.0,
+      "forecast": 36.37931034482608,
+      "gap_pp": 8.62068965517392,
+      "gap_percent": 19.15708812260871,
+      "required_annual_growth": 8.62068965517392
+    }
+  }
+}

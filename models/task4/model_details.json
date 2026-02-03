@@ -1,0 +1,17 @@
+{
+  "parameters": {
+    "forecast_horizon": [
+      2025,
+      2026,
+      2027
+    ],
+    "baseline_year": 2024,
+    "confidence_level": 0.95,
+    "n_simulations": 1000
+  },
+  "timestamp": "2026-02-03T19:46:26.178867",
+  "indicators_forecasted": [
+    "ACC_OWNERSHIP",
+    "USG_DIGITAL_PAYMENT"
+  ]
+}
