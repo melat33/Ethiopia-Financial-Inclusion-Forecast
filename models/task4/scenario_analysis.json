@@ -1,0 +1,96 @@
+{
+  "ACC_OWNERSHIP": {
+    "pessimistic": {
+      "forecasts": {
+        "2025": 52.69,
+        "2026": 54.65,
+        "2027": 56.61
+      },
+      "description": "Slow growth, regulatory challenges, economic headwinds, limited event implementation",
+      "assumptions": [
+        "GDP growth below 5%",
+        "Limited infrastructure investment",
+        "Slow regulatory reforms",
+        "Weak event implementation"
+      ],
+      "probability": 0.2
+    },
+    "baseline": {
+      "forecasts": {
+        "2025": 57.04,
+        "2026": 59.75,
+        "2027": 62.46
+      },
+      "description": "Current trajectory continuation, moderate policy reforms, steady infrastructure growth",
+      "assumptions": [
+        "GDP growth 6-7%",
+        "Moderate infrastructure investment",
+        "Steady regulatory progress",
+        "Partial event implementation"
+      ],
+      "probability": 0.6
+    },
+    "optimistic": {
+      "forecasts": {
+        "2025": 60.59,
+        "2026": 64.05,
+        "2027": 67.51
+      },
+      "description": "Strong reforms, accelerated digital adoption, favorable economic conditions, successful event implementation",
+      "assumptions": [
+        "GDP growth above 8%",
+        "Strong infrastructure push",
+        "Accelerated regulatory reforms",
+        "Full event implementation"
+      ],
+      "probability": 0.2
+    }
+  },
+  "USG_DIGITAL_PAYMENT": {
+    "pessimistic": {
+      "forecasts": {
+        "2025": 34.68,
+        "2026": 35.58,
+        "2027": 36.47
+      },
+      "description": "Slow growth, regulatory challenges, economic headwinds, limited event implementation",
+      "assumptions": [
+        "GDP growth below 5%",
+        "Limited infrastructure investment",
+        "Slow regulatory reforms",
+        "Weak event implementation"
+      ],
+      "probability": 0.2
+    },
+    "baseline": {
+      "forecasts": {
+        "2025": 40.58,
+        "2026": 42.98,
+        "2027": 45.37
+      },
+      "description": "Current trajectory continuation, moderate policy reforms, steady infrastructure growth",
+      "assumptions": [
+        "GDP growth 6-7%",
+        "Moderate infrastructure investment",
+        "Steady regulatory progress",
+        "Partial event implementation"
+      ],
+      "probability": 0.6
+    },
+    "optimistic": {
+      "forecasts": {
+        "2025": 45.28,
+        "2026": 49.18,
+        "2027": 53.07
+      },
+      "description": "Strong reforms, accelerated digital adoption, favorable economic conditions, successful event implementation",
+      "assumptions": [
+        "GDP growth above 8%",
+        "Strong infrastructure push",
+        "Accelerated regulatory reforms",
+        "Full event implementation"
+      ],
+      "probability": 0.2
+    }
+  }
+}
