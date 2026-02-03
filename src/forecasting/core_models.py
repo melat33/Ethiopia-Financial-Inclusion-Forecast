@@ -64,73 +64,53 @@ class FinancialInclusionForecaster:
         self.forecasts = {}
         
     def fit_linear_trend(self, indicator: str, data: pd.DataFrame) -> Dict:
-        """Fit linear trend model with regularization - FIXED VERSION"""
+        """Simplified and robust linear trend model"""
         if indicator not in data.columns:
-            raise ValueError(f"Indicator {indicator} not in data")
-        
-        valid_data = data[['year', indicator]].dropna()
-        if len(valid_data) < 2:
+            print(f"Warning: {indicator} not in data")
             return None
         
-        # Bayesian linear regression with weak priors
-        X = valid_data['year'].values - 2000  # Center years
-        y = valid_data[indicator].values
-        
-        # Ensure X is 2D for matrix operations
-        X = X.reshape(-1, 1)
-        
-        # Add regularization (ridge regression)
-        lambda_reg = 0.1
-        X_centered = X - np.mean(X)
-        
-        # Fix the matrix dimension issue
-        n_features = X_centered.shape[1]
-        identity_matrix = np.eye(n_features)
+        # Get data for the indicator
+        series_data = data[['year', indicator]].dropna()
+        if len(series_data) < 2:
+            print(f"Warning: Insufficient data for {indicator}")
+            return None
         
         try:
-            # Calculate coefficients using matrix algebra
-            XTX = X_centered.T @ X_centered
-            XTX_regularized = XTX + lambda_reg * identity_matrix
+            # Extract X (years) and y (values)
+            X = series_data['year'].values.astype(float)
+            y = series_data[indicator].values.astype(float)
             
-            # Check if matrix is invertible
-            if np.linalg.matrix_rank(XTX_regularized) < n_features:
-                # Use pseudoinverse if not invertible
-                beta = np.linalg.pinv(XTX_regularized) @ X_centered.T @ y
-            else:
-                beta = np.linalg.inv(XTX_regularized) @ X_centered.T @ y
+            # Simple linear regression using polyfit (more stable)
+            # polyfit returns coefficients in descending order: slope, intercept
+            slope, intercept = np.polyfit(X, y, 1)
             
-            alpha = np.mean(y) - beta * np.mean(X)
+            # Convert to plain Python floats
+            slope = float(slope)
+            intercept = float(intercept)
             
-        except np.linalg.LinAlgError:
-            # Fallback to simple linear regression
-            print(f"⚠️ Matrix inversion failed for {indicator}, using simple regression")
-            coeffs = np.polyfit(X.flatten(), y, 1)
-            alpha = coeffs[1]
-            beta = coeffs[0]
-        
-        # Forecast
-        forecasts = {}
-        for year in self.params.forecast_horizon:
-            X_pred = year - 2000
-            forecast = alpha + beta * X_pred
+            # Generate forecasts
+            forecasts = {}
+            for year in self.params.forecast_horizon:
+                forecast = intercept + slope * year
+                # Apply bounds (0-100%)
+                forecast = max(0, min(100, forecast))
+                forecasts[year] = float(forecast)
             
-            # Handle scalar vs array
-            if hasattr(forecast, '__len__'):
-                forecast = float(forecast[0])
-            else:
-                forecast = float(forecast)
+            # Calculate R-squared
+            y_pred = intercept + slope * X
+            r_squared = self._calculate_r_squared(y, y_pred)
             
-            # Apply bounds
-            forecast = max(0, min(100, forecast))
-            forecasts[year] = forecast
-        
-        return {
-            'method': 'bayesian_linear',
-            'alpha': float(alpha),
-            'beta': float(beta[0]) if hasattr(beta, '__len__') else float(beta),
-            'forecasts': forecasts,
-            'r_squared': self._calculate_r_squared(X.flatten(), y, alpha, beta)
-        }
+            return {
+                'method': 'linear_trend',
+                'alpha': intercept,
+                'beta': slope,
+                'forecasts': forecasts,
+                'r_squared': r_squared
+            }
+            
+        except Exception as e:
+            print(f"Error fitting linear trend for {indicator}: {e}")
+            return None
     
     def fit_event_augmented_model(self, indicator: str, 
                                  historical_data: pd.DataFrame,
@@ -334,12 +314,15 @@ class FinancialInclusionForecaster:
         
         return gaps
     
-    def _calculate_r_squared(self, X: np.ndarray, y: np.ndarray, 
-                           alpha: float, beta: float) -> float:
+    def _calculate_r_squared(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
         """Calculate R-squared for regression model"""
-        y_pred = alpha + beta * X
-        ss_res = np.sum((y - y_pred) ** 2)
-        ss_tot = np.sum((y - np.mean(y)) ** 2)
+        # Ensure both are 1D arrays
+        y_true = np.asarray(y_true).flatten()
+        y_pred = np.asarray(y_pred).flatten()
+        
+        ss_res = np.sum((y_true - y_pred) ** 2)
+        ss_tot = np.sum((y_true - np.mean(y_true)) ** 2)
+        
         return 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
     
     def _calculate_growth_rate(self, forecast_result: Dict) -> Dict:
